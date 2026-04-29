@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050810">
+<title>Nexora · Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#050810;--bg2:#080d1c;--bg3:#0d1428;--bg4:#121932;
+  --b1:rgba(56,140,255,.07);--b2:rgba(56,140,255,.17);--b3:rgba(56,140,255,.40);
+  --text:#cce0ff;--muted:#1e3060;--m2:#4a6a9e;--m3:#7a9acc;
+  --acc:#3d8eff;--acc2:#1a5fd4;--achi:#72b4ff;
+  --adim:rgba(56,140,255,.1);--aglow:rgba(56,140,255,.28);
+  --cyan:#00ccff;--red:#ff4466;--amber:#ffaa00;--green:#00dda8;--purple:#9966ff;
+  --r:12px;--rs:7px;
+}
+html,body{min-height:100vh;background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text);}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle,rgba(56,140,255,.08) 1px,transparent 1px);
+  background-size:28px 28px;}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;z-index:999;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);
+  padding:32px 28px;width:100%;max-width:380px;position:relative;}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--acc),var(--cyan));border-radius:var(--r) var(--r) 0 0;}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.llhex{width:36px;height:36px;border-radius:8px;background:var(--adim);border:0.5px solid var(--b3);
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--acc);
+  box-shadow:0 0 14px var(--aglow);}
+.llword{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
+.llword em{color:var(--acc);font-style:normal;}
+.login-sub{font-size:11px;color:var(--m2);font-family:'Space Mono',monospace;margin-bottom:24px;}
+.lfg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.lfg label{font-size:10px;color:var(--m2);letter-spacing:1px;text-transform:uppercase;font-family:'Space Mono',monospace;}
+.lfg input{background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:11px 13px;color:var(--text);font-size:14px;font-family:'Outfit',sans-serif;
+  outline:none;transition:border-color .15s;width:100%;}
+.lfg input:focus{border-color:var(--b3);}
+.lfg input::placeholder{color:var(--muted);}
+.login-err{font-size:12px;color:var(--red);font-family:'Space Mono',monospace;
+  margin-top:6px;display:none;padding:8px 12px;background:rgba(255,68,102,.07);
+  border:0.5px solid rgba(255,68,102,.2);border-radius:var(--rs);}
+
+/* ── LAYOUT ADMIN ── */
+#admin-app{display:none;min-height:100vh;}
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;
+  background:var(--bg2);border-right:0.5px solid var(--b2);z-index:100;
+  display:flex;flex-direction:column;}
+#main-content{margin-left:220px;min-height:100vh;padding:24px;}
+
+/* ── LAYOUT TECNICO ── */
+#tec-app{display:none;min-height:100vh;padding:0;}
+.tec-header{position:sticky;top:0;z-index:100;height:54px;
+  background:rgba(5,8,16,.97);backdrop-filter:blur(20px);
+  border-bottom:0.5px solid var(--b2);
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
+.tec-header-logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.tec-header-logo em{color:var(--acc);font-style:normal;}
+.tec-header-user{display:flex;align-items:center;gap:12px;}
+.tec-name-badge{background:var(--adim);border:0.5px solid var(--b2);border-radius:20px;
+  padding:4px 12px;font-size:12px;color:var(--achi);font-family:'Space Mono',monospace;}
+.tec-content{padding:20px;max-width:900px;margin:0 auto;}
+
+/* sidebar */
+.sb-logo{padding:18px 16px;border-bottom:0.5px solid var(--b1);display:flex;align-items:center;gap:9px;}
+.sb-hex{width:28px;height:28px;border-radius:6px;background:var(--adim);border:0.5px solid var(--b3);
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--acc);
+  box-shadow:0 0 10px var(--aglow);}
+.sb-word{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;}
+.sb-word em{color:var(--acc);font-style:normal;}
+.sb-admin-tag{font-size:9px;color:var(--m2);font-family:'Space Mono',monospace;letter-spacing:1px;}
+.sb-nav{padding:12px 8px;flex:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);
+  cursor:pointer;transition:all .15s;font-size:13px;color:var(--m2);margin-bottom:3px;
+  border:0.5px solid transparent;}
+.nav-item:hover{background:var(--adim);color:var(--achi);}
+.nav-item.act{background:var(--adim);border-color:var(--b2);color:var(--achi);}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.sb-footer{padding:12px;border-top:0.5px solid var(--b1);}
+.sb-user-info{font-size:11px;color:var(--m2);font-family:'Space Mono',monospace;margin-bottom:4px;}
+.sb-logout{font-size:11px;color:var(--red);cursor:pointer;font-family:'Space Mono',monospace;}
+
+/* ── COMMON UI ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+.page-title{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;}
+.page-sub{font-size:12px;color:var(--m2);margin-top:3px;}
+.section{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);overflow:hidden;margin-bottom:18px;}
+.sec-hdr{padding:13px 16px;border-bottom:0.5px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.sec-title{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--achi);letter-spacing:1px;text-transform:uppercase;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat-card{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);padding:16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--acc),var(--cyan));opacity:.6;}
+.sc-icon{font-size:20px;margin-bottom:8px;}
+.sc-val{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.sc-lbl{font-size:11px;color:var(--m2);}
+.sc-note{font-size:10px;color:var(--green);margin-top:4px;font-family:'Space Mono',monospace;}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:10px 14px;text-align:left;font-size:10px;color:var(--m2);
+  letter-spacing:1.5px;text-transform:uppercase;font-family:'Space Mono',monospace;
+  border-bottom:0.5px solid var(--b1);background:rgba(56,140,255,.03);}
+.tbl td{padding:11px 14px;font-size:13px;border-bottom:0.5px solid var(--b1);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(56,140,255,.02);}
+.tbl-empty{padding:32px;text-align:center;font-size:13px;color:var(--m2);font-family:'Space Mono',monospace;}
+.tbl-wrap{overflow-x:auto;}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:20px;font-family:'Space Mono',monospace;letter-spacing:.5px;}
+.badge.pendiente{background:rgba(255,170,0,.1);color:var(--amber);border:0.5px solid rgba(255,170,0,.2);}
+.badge.confirmada{background:rgba(56,140,255,.1);color:var(--achi);border:0.5px solid rgba(56,140,255,.2);}
+.badge.completada{background:rgba(0,221,168,.1);color:var(--green);border:0.5px solid rgba(0,221,168,.2);}
+.badge.cancelada{background:rgba(255,68,102,.1);color:var(--red);border:0.5px solid rgba(255,68,102,.2);}
+.badge.basico{background:rgba(56,140,255,.08);color:var(--m3);border:0.5px solid var(--b1);}
+.badge.empresarial{background:rgba(0,204,255,.1);color:var(--cyan);border:0.5px solid rgba(0,204,255,.2);}
+.badge.corporativo{background:rgba(153,102,255,.1);color:var(--purple);border:0.5px solid rgba(153,102,255,.2);}
+.badge.activo{background:rgba(0,221,168,.1);color:var(--green);border:0.5px solid rgba(0,221,168,.2);}
+.badge.inactivo{background:rgba(255,68,102,.08);color:var(--red);border:0.5px solid rgba(255,68,102,.2);}
+
+/* buttons */
+.btn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;
+  border-radius:var(--rs);padding:8px 16px;font-size:11px;font-family:'Space Mono',monospace;
+  font-weight:700;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px;
+  display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn:active{transform:scale(.97);}
+.btn.sm{padding:5px 11px;font-size:10px;}
+.btn.ghost{background:transparent;border:0.5px solid var(--b2);color:var(--m3);}
+.btn.ghost:hover{border-color:var(--b3);color:var(--achi);}
+.btn.danger{background:linear-gradient(135deg,var(--red),#cc2244);}
+.btn.success{background:linear-gradient(135deg,var(--green),#00aa80);color:var(--bg);}
+.btn.warn{background:linear-gradient(135deg,var(--amber),#cc8800);color:var(--bg);}
+
+/* filters */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.fsel{background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:7px 12px;color:var(--text);font-size:12px;font-family:'Space Mono',monospace;outline:none;cursor:pointer;}
+.finput{background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:7px 12px;color:var(--text);font-size:12px;font-family:'Outfit',sans-serif;
+  outline:none;width:180px;}
+.finput:focus,.fsel:focus{border-color:var(--b3);}
+.finput::placeholder{color:var(--muted);}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(5,8,16,.88);z-index:500;
+  display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);
+  width:100%;max-width:520px;position:relative;margin:auto;}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--acc),var(--cyan));border-radius:var(--r) var(--r) 0 0;}
+.modal.wide{max-width:700px;}
+.modal-hdr{padding:16px 18px;border-bottom:0.5px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--achi);}
+.modal-close{background:none;border:none;color:var(--m2);font-size:20px;cursor:pointer;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:18px;}
+.modal-footer{padding:13px 18px;border-top:0.5px solid var(--b1);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+
+/* form inside modal */
+.mfg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.mfg label{font-size:10px;color:var(--m2);letter-spacing:1px;text-transform:uppercase;font-family:'Space Mono',monospace;}
+.mfg input,.mfg select,.mfg textarea{background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:10px 12px;color:var(--text);font-size:13px;font-family:'Outfit',sans-serif;
+  outline:none;transition:border-color .15s;width:100%;}
+.mfg input:focus,.mfg select:focus,.mfg textarea:focus{border-color:var(--b3);}
+.mfg textarea{resize:vertical;min-height:70px;}
+
+/* detail rows */
+.drow{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:7px 0;border-bottom:0.5px solid var(--b1);}
+.drow:last-child{border-bottom:none;}
+.dk{color:var(--m2);font-family:'Space Mono',monospace;font-size:11px;flex-shrink:0;margin-right:10px;margin-top:1px;}
+.dv{color:var(--text);text-align:right;word-break:break-word;max-width:65%;font-size:13px;}
+.dv.cy{color:var(--cyan);font-family:'Space Mono',monospace;}
+.dv.gr{color:var(--green);}
+
+/* credential box */
+.cred-box{background:var(--bg3);border:0.5px solid var(--b3);border-radius:var(--rs);
+  padding:14px;margin-top:12px;}
+.cred-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;}
+.cred-title::before{content:'🔑';}
+.cred-row{display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:0.5px solid var(--b1);}
+.cred-row:last-child{border-bottom:none;}
+.cred-key{font-size:11px;color:var(--m2);font-family:'Space Mono',monospace;}
+.cred-val{font-family:'Space Mono',monospace;font-size:13px;color:var(--achi);
+  background:rgba(56,140,255,.08);padding:3px 10px;border-radius:var(--rs);}
+.cred-warn{font-size:11px;color:var(--amber);margin-top:10px;line-height:1.5;}
+
+/* técnico cards */
+.tec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:14px;}
+.tec-card{background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:14px;position:relative;transition:border-color .15s;}
+.tec-card:hover{border-color:var(--b3);}
+.tec-avatar{width:42px;height:42px;border-radius:10px;background:var(--adim);
+  border:0.5px solid var(--b3);display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:10px;}
+.tec-name{font-size:14px;font-weight:700;margin-bottom:2px;}
+.tec-user{font-family:'Space Mono',monospace;font-size:11px;color:var(--acc);margin-bottom:2px;}
+.tec-tel{font-size:11px;color:var(--m2);font-family:'Space Mono',monospace;}
+.tec-stats{display:flex;gap:10px;margin-top:10px;}
+.tec-stat{text-align:center;}
+.tec-stat-n{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--acc);}
+.tec-stat-l{font-size:9px;color:var(--m2);}
+.tec-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.tec-status{position:absolute;top:10px;right:10px;}
+
+/* charts */
+.chart-box{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);padding:16px;}
+.chart-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--m2);
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-label{font-size:11px;color:var(--m3);min-width:100px;font-family:'Space Mono',monospace;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-wrap{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc),var(--cyan));
+  transition:width .6s cubic-bezier(.4,0,.2,1);}
+.bar-val{font-size:11px;color:var(--achi);font-family:'Space Mono',monospace;min-width:36px;text-align:right;}
+.pie-wrap{display:flex;flex-direction:column;gap:8px;}
+.pie-item{display:flex;align-items:center;gap:10px;}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.pie-lbl{font-size:12px;color:var(--m3);flex:1;}
+.pie-pct{font-size:12px;color:var(--text);font-family:'Space Mono',monospace;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:320px;}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:80%;padding:10px 13px;border-radius:var(--r);position:relative;}
+.chat-msg.admin{background:var(--adim);border:0.5px solid var(--b2);align-self:flex-start;}
+.chat-msg.tecnico{background:linear-gradient(135deg,rgba(56,140,255,.15),rgba(0,204,255,.08));
+  border:0.5px solid var(--b3);align-self:flex-end;}
+.chat-msg-autor{font-family:'Space Mono',monospace;font-size:10px;color:var(--m2);margin-bottom:4px;display:flex;gap:6px;align-items:center;}
+.chat-msg-autor .rol-tag{background:var(--adim);padding:1px 7px;border-radius:10px;font-size:9px;}
+.chat-msg-autor .rol-tag.admin{color:var(--amber);}
+.chat-msg-autor .rol-tag.tecnico{color:var(--acc);}
+.chat-msg-txt{font-size:13px;line-height:1.5;}
+.chat-msg-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--m2);margin-top:4px;text-align:right;}
+.chat-input-row{padding:12px;border-top:0.5px solid var(--b1);display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--rs);
+  padding:9px 12px;color:var(--text);font-size:13px;font-family:'Outfit',sans-serif;outline:none;}
+.chat-input:focus{border-color:var(--b3);}
+.chat-input::placeholder{color:var(--muted);}
+.chat-send{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;
+  border-radius:var(--rs);padding:9px 14px;font-size:11px;font-family:'Space Mono',monospace;
+  cursor:pointer;transition:all .15s;font-weight:700;}
+.chat-send:hover{opacity:.88;}
+
+/* ── TÉCNICO: CITA CARD ── */
+.cita-card{background:var(--bg2);border:0.5px solid var(--b2);border-radius:var(--r);
+  padding:16px;margin-bottom:12px;transition:border-color .2s;}
+.cita-card:hover{border-color:var(--b3);}
+.cita-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.cita-ref{font-family:'Space Mono',monospace;font-size:11px;color:var(--m2);}
+.cita-fecha{font-size:13px;font-weight:700;color:var(--achi);margin:4px 0;}
+.cita-plan{font-size:12px;color:var(--m2);}
+.cita-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.cita-info-item{background:var(--bg3);border-radius:var(--rs);padding:8px 10px;}
+.cita-info-label{font-size:10px;color:var(--m2);font-family:'Space Mono',monospace;margin-bottom:3px;}
+.cita-info-val{font-size:13px;color:var(--text);word-break:break-all;}
+.cita-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.map-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--cyan);
+  text-decoration:none;font-family:'Space Mono',monospace;
+  background:rgba(0,204,255,.08);padding:5px 11px;border-radius:var(--rs);
+  border:0.5px solid rgba(0,204,255,.2);transition:all .15s;}
+.map-link:hover{background:rgba(0,204,255,.14);}
+
+/* ── TABS ── */
+.tab-page{display:none;} .tab-page.act{display:block;}
+.tec-tab-page{display:none;} .tec-tab-page.act{display:block;}
+
+/* loading/spinner */
+.loading{display:flex;align-items:center;justify-content:center;padding:36px;
+  font-family:'Space Mono',monospace;font-size:12px;color:var(--m2);gap:10px;}
+.spin{width:14px;height:14px;border:1.5px solid rgba(56,140,255,.15);
+  border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* toast */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:0.5px solid var(--b2);
+  border-radius:var(--r);padding:11px 18px;font-size:12px;font-family:'Space Mono',monospace;
+  z-index:9999;opacity:0;transition:all .3s;pointer-events:none;max-width:320px;}
+#toast.show{opacity:1;}
+#toast.ok{border-color:rgba(0,221,168,.3);color:var(--green);}
+#toast.err{border-color:rgba(255,68,102,.3);color:var(--red);}
+#toast.info{border-color:rgba(56,140,255,.3);color:var(--achi);}
+#toast.warn{border-color:rgba(255,170,0,.3);color:var(--amber);}
+
+/* responsive */
+@media(max-width:768px){
+  #sidebar{width:56px;}
+  .sb-word,.sb-admin-tag,.nav-item span:not(.ni),.sb-user-info,.sb-logout-txt{display:none;}
+  .nav-item{justify-content:center;}
+  #main-content{margin-left:56px;padding:16px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .charts-row{grid-template-columns:1fr;}
+  .tec-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .tec-grid{grid-template-columns:1fr;}
+  .cita-info-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="llhex">⬡</div>
+      <div class="llword">Nexo<em>ra</em></div>
+    </div>
+    <div class="login-sub">PORTAL DE ACCESO · APARTADÓ</div>
+    <div class="lfg"><label>Usuario</label><input id="lu" placeholder="tu_usuario" type="text" autocomplete="username"></div>
+    <div class="lfg"><label>Contraseña</label><input id="lp" placeholder="••••••••" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-err" id="lerr">Usuario o contraseña incorrectos</div>
+    <div style="margin-top:14px">
+      <button class="btn" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="doLogin()">
+        <span id="login-btn-txt">INGRESAR →</span>
+      </button>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--m2);text-align:center;font-family:'Space Mono',monospace;">
+      Nexora · Mantenimiento preventivo · Apartadó
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN APP ══════════ -->
+<div id="admin-app">
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-hex">⬡</div>
+      <div><div class="sb-word">Nexo<em>ra</em></div><div class="sb-admin-tag">ADMIN</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item act" onclick="showAdminTab('dashboard',this)"><span class="ni">📊</span><span>Dashboard</span></div>
+      <div class="nav-item" onclick="showAdminTab('citas',this)"><span class="ni">📋</span><span>Citas</span></div>
+      <div class="nav-item" onclick="showAdminTab('tecnicos',this)"><span class="ni">👨‍🔧</span><span>Técnicos</span></div>
+      <div class="nav-item" onclick="showAdminTab('estadisticas',this)"><span class="ni">📈</span><span>Estadísticas</span></div>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user-info">👤 Administrador</div>
+      <div class="sb-logout" onclick="doLogout()"><span class="sb-logout-txt">Cerrar sesión</span> ↩</div>
+    </div>
+  </div>
+
+  <div id="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="tab-page act" id="tab-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-date"></div></div>
+        <button class="btn ghost" onclick="loadAll()">↻ ACTUALIZAR</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="sc-icon">📋</div><div class="sc-val" id="sc-total">—</div><div class="sc-lbl">Total citas</div></div>
+        <div class="stat-card"><div class="sc-icon">⏳</div><div class="sc-val" id="sc-pend">—</div><div class="sc-lbl">Pendientes</div></div>
+        <div class="stat-card"><div class="sc-icon">✅</div><div class="sc-val" id="sc-comp">—</div><div class="sc-lbl">Completadas</div></div>
+        <div class="stat-card"><div class="sc-icon">💰</div><div class="sc-val" id="sc-ing">—</div><div class="sc-lbl">Ingresos reales</div><div class="sc-note">solo completadas</div></div>
+      </div>
+      <div class="section">
+        <div class="sec-hdr"><span class="sec-title">Últimas citas</span><button class="btn sm" onclick="showAdminTab('citas',null)">Ver todas</button></div>
+        <div id="dash-citas"><div class="loading"><div class="spin"></div>Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- CITAS -->
+    <div class="tab-page" id="tab-citas">
+      <div class="page-header">
+        <div><div class="page-title">Gestión de Citas</div><div class="page-sub">Administra, filtra y asigna técnicos</div></div>
+      </div>
+      <div class="section">
+        <div class="sec-hdr">
+          <span class="sec-title">Todas las citas</span>
+          <div class="filter-bar">
+            <input class="finput" id="f-search" placeholder="Buscar cliente..." oninput="filterCitas()">
+            <select class="fsel" id="f-estado" onchange="filterCitas()">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="completada">Completada</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+            <select class="fsel" id="f-plan" onchange="filterCitas()">
+              <option value="">Todos los planes</option>
+              <option value="Básico">Básico</option>
+              <option value="Empresarial">Empresarial</option>
+              <option value="Corporativo">Corporativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Ref</th><th>Cliente</th><th>Plan</th><th>Fecha</th><th>Total</th><th>Estado</th><th>Técnico</th><th>Acciones</th></tr></thead>
+            <tbody id="tbody-citas"><tr><td colspan="8"><div class="loading"><div class="spin"></div>Cargando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TÉCNICOS -->
+    <div class="tab-page" id="tab-tecnicos">
+      <div class="page-header">
+        <div><div class="page-title">Técnicos</div><div class="page-sub">Gestiona el equipo · Las credenciales se auto-generan</div></div>
+        <button class="btn" onclick="openAddTec()">+ AGREGAR TÉCNICO</button>
+      </div>
+      <div class="section">
+        <div class="tec-grid" id="tec-grid"><div class="loading"><div class="spin"></div>Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="tab-page" id="tab-estadisticas">
+      <div class="page-header"><div><div class="page-title">Estadísticas</div><div class="page-sub">Análisis de rendimiento global</div></div></div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="sc-icon">📅</div><div class="sc-val" id="est-mes">—</div><div class="sc-lbl">Citas este mes</div></div>
+        <div class="stat-card"><div class="sc-icon">💵</div><div class="sc-val" id="est-ing">—</div><div class="sc-lbl">Ingresos mes</div><div class="sc-note">solo completadas</div></div>
+        <div class="stat-card"><div class="sc-icon">⚙️</div><div class="sc-val" id="est-eq">—</div><div class="sc-lbl">Equipos atendidos</div></div>
+        <div class="stat-card"><div class="sc-icon">🏆</div><div class="sc-val" id="est-plan">—</div><div class="sc-lbl">Plan más vendido</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box"><div class="chart-title">Citas por plan</div><div id="chart-planes"></div></div>
+        <div class="chart-box"><div class="chart-title">Distribución por estado</div><div class="pie-wrap" id="chart-estados"></div></div>
+      </div>
+      <div class="section"><div class="sec-hdr"><span class="sec-title">Rendimiento por técnico</span></div><div id="chart-tecnicos" style="padding:14px"></div></div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /admin-app -->
+
+<!-- ══════════ TÉCNICO APP ══════════ -->
+<div id="tec-app">
+  <div class="tec-header">
+    <div class="tec-header-logo">
+      <span style="font-size:16px;margin-right:2px">⬡</span>Nexo<em>ra</em>
+    </div>
+    <div class="tec-header-user">
+      <div class="tec-name-badge" id="tec-welcome">👨‍🔧 Técnico</div>
+      <button class="btn ghost sm" onclick="doLogout()">SALIR ↩</button>
+    </div>
+  </div>
+
+  <!-- TABS NAV -->
+  <div style="background:var(--bg2);border-bottom:0.5px solid var(--b2);padding:0 20px;display:flex;gap:0;">
+    <div class="tec-tab-btn act" id="ttb-mis-citas" onclick="showTecTab('mis-citas',this)"
+      style="padding:12px 16px;font-size:12px;font-family:'Space Mono',monospace;cursor:pointer;
+      color:var(--achi);border-bottom:2px solid var(--acc);transition:all .15s;">
+      📋 MIS CITAS
+    </div>
+    <div class="tec-tab-btn" id="ttb-mis-stats" onclick="showTecTab('mis-stats',this)"
+      style="padding:12px 16px;font-size:12px;font-family:'Space Mono',monospace;cursor:pointer;
+      color:var(--m2);border-bottom:2px solid transparent;transition:all .15s;">
+      📈 MIS ESTADÍSTICAS
+    </div>
+  </div>
+
+  <div class="tec-content">
+
+    <!-- MIS CITAS -->
+    <div class="tec-tab-page act" id="tec-tab-mis-citas">
+      <div style="margin:20px 0 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;">Mis citas asignadas</div>
+          <div style="font-size:12px;color:var(--m2);margin-top:3px;">Solo puedes ver y gestionar las citas que te han asignado</div>
+        </div>
+        <div class="filter-bar">
+          <select class="fsel" id="tec-f-estado" onchange="filterTecCitas()">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="completada">Completada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <div id="tec-citas-list"><div class="loading"><div class="spin"></div>Cargando tus citas...</div></div>
+    </div>
+
+    <!-- MIS ESTADÍSTICAS -->
+    <div class="tec-tab-page" id="tec-tab-mis-stats">
+      <div style="margin:20px 0 16px;">
+        <div style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;">Mis estadísticas</div>
+        <div style="font-size:12px;color:var(--m2);margin-top:3px;">Tu rendimiento personal en Nexora</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="sc-icon">📋</div><div class="sc-val" id="tsc-total">—</div><div class="sc-lbl">Total asignadas</div></div>
+        <div class="stat-card"><div class="sc-icon">✅</div><div class="sc-val" id="tsc-comp">—</div><div class="sc-lbl">Completadas</div></div>
+        <div class="stat-card"><div class="sc-icon">⏳</div><div class="sc-val" id="tsc-pend">—</div><div class="sc-lbl">Pendientes</div></div>
+        <div class="stat-card"><div class="sc-icon">💰</div><div class="sc-val" id="tsc-ing">—</div><div class="sc-lbl">Ingresos generados</div><div class="sc-note">completadas</div></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:16px">
+        <div class="chart-title">Mis citas por estado</div>
+        <div class="pie-wrap" id="tec-chart-estados"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Mis citas por plan</div>
+        <div id="tec-chart-planes"></div>
+      </div>
+    </div>
+
+  </div><!-- /tec-content -->
+</div><!-- /tec-app -->
+
+<!-- MODAL: Detalle cita (admin) -->
+<div class="overlay" id="modal-cita">
+  <div class="modal wide">
+    <div class="modal-hdr">
+      <span class="modal-title" id="mc-title">Detalle de cita</span>
+      <button class="modal-close" onclick="closeModal('modal-cita')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" id="mc-info"></div>
+      <div style="margin-bottom:14px">
+        <div class="mfg"><label>Estado</label>
+          <select id="mc-estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="completada">Completada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="mfg"><label>Técnico asignado</label><select id="mc-tec"><option value="">Sin asignar</option></select></div>
+      </div>
+      <!-- Chat -->
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--m2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Notas / Chat con técnico</div>
+      <div style="background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--r);overflow:hidden;">
+        <div class="chat-wrap">
+          <div class="chat-msgs" id="admin-chat-msgs"><div style="text-align:center;color:var(--m2);font-size:12px;padding:20px">Sin notas aún</div></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="admin-chat-input" placeholder="Escribe una nota..." onkeydown="if(event.key==='Enter')sendAdminNote()">
+            <button class="chat-send" onclick="sendAdminNote()">ENVIAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost sm" onclick="closeModal('modal-cita')">CERRAR</button>
+      <button class="btn sm" onclick="saveCitaChanges()">GUARDAR CAMBIOS</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Agregar/editar técnico -->
+<div class="overlay" id="modal-tec">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="mt-title">Agregar técnico</span>
+      <button class="modal-close" onclick="closeModal('modal-tec')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="mfg"><label>Nombre completo *</label><input id="t-nom" placeholder="Carlos Pérez"></div>
+      <div class="mfg"><label>Teléfono *</label><input id="t-tel" placeholder="3001234567"></div>
+      <div class="mfg"><label>Correo</label><input id="t-email" placeholder="tecnico@nexora.co"></div>
+      <div class="mfg"><label>Estado</label><select id="t-activo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+      <div id="tec-cred-display" style="display:none">
+        <div class="cred-box">
+          <div class="cred-title">Credenciales de acceso</div>
+          <div class="cred-row"><span class="cred-key">Usuario</span><span class="cred-val" id="cred-user">—</span></div>
+          <div class="cred-row"><span class="cred-key">Contraseña</span><span class="cred-val" id="cred-pass">—</span></div>
+          <div class="cred-warn">⚠️ Guarda estas credenciales ahora. La contraseña no se puede recuperar después.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost sm" onclick="closeModal('modal-tec')">CANCELAR</button>
+      <button class="btn sm" id="btn-save-tec" onclick="saveTecnico()">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver cita (técnico) -->
+<div class="overlay" id="modal-tec-cita">
+  <div class="modal wide">
+    <div class="modal-hdr">
+      <span class="modal-title" id="mtc-title">Mi cita</span>
+      <button class="modal-close" onclick="closeModal('modal-tec-cita')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="mtc-info" style="margin-bottom:14px"></div>
+      <div class="mfg"><label>Cambiar estado</label>
+        <select id="mtc-estado">
+          <option value="confirmada">Confirmada</option>
+          <option value="completada">✅ Marcar como completada</option>
+          <option value="cancelada">✗ Cancelar cita</option>
+        </select>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--m2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;margin-top:16px;">Chat / Notas</div>
+      <div style="background:var(--bg3);border:0.5px solid var(--b2);border-radius:var(--r);overflow:hidden;">
+        <div class="chat-wrap">
+          <div class="chat-msgs" id="tec-chat-msgs"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="tec-chat-input" placeholder="Escribe una nota..." onkeydown="if(event.key==='Enter')sendTecNote()">
+            <button class="chat-send" onclick="sendTecNote()">ENVIAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost sm" onclick="closeModal('modal-tec-cita')">CERRAR</button>
+      <button class="btn sm success" onclick="saveTecCitaChanges()">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span id="tmsg"></span></div>
+
+<script>
+// ── SUPABASE ──
+var db=supabase.createClient(
+  'https://gbyhvgzwrufvvnwokzez.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdieWh2Z3p3cnVmdnZud29remV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNDM2NzUsImV4cCI6MjA5MjcxOTY3NX0.F_e6t19ozmrmgHPXOpUDEr5bOkae8Si7Lo1zFgPW4hw'
+);
+
+// ── AUTH ──
+var ADMIN_USER='nexora', ADMIN_PASS='nexora2026';
+var currentRole=null, currentTec=null;
+var editCitaId=null, editTecCitaId=null;
+
+async function doLogin(){
+  var u=document.getElementById('lu').value.trim();
+  var p=document.getElementById('lp').value.trim();
+  if(!u||!p){toast('Ingresa usuario y contraseña','err');return;}
+  var btn=document.getElementById('login-btn-txt');
+  btn.textContent='VERIFICANDO...';
+
+  // Admin check
+  if(u===ADMIN_USER&&p===ADMIN_PASS){
+    currentRole='admin';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-app').style.display='block';
+    document.getElementById('dash-date').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    loadAll();
+    btn.textContent='INGRESAR →';
+    return;
+  }
+
+  // Técnico check — buscar en DB por usuario
+  var res=await db.from('tecnicos').select('*').eq('usuario',u).eq('activo',true);
+  if(res.error||!res.data||!res.data.length){
+    document.getElementById('lerr').style.display='block';
+    btn.textContent='INGRESAR →';
+    return;
+  }
+  var tec=res.data[0];
+  // Compare password (plain text stored — for production use bcrypt)
+  if(tec.password_hash!==p){
+    document.getElementById('lerr').style.display='block';
+    btn.textContent='INGRESAR →';
+    return;
+  }
+
+  currentRole='tecnico';
+  currentTec=tec;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('tec-app').style.display='block';
+  document.getElementById('tec-welcome').textContent='👨‍🔧 '+tec.nombre;
+  loadTecData();
+  btn.textContent='INGRESAR →';
+}
+
+function doLogout(){
+  currentRole=null; currentTec=null;
+  document.getElementById('admin-app').style.display='none';
+  document.getElementById('tec-app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+  document.getElementById('lerr').style.display='none';
+}
+
+// ── GLOBAL DATA ──
+var allCitas=[], allTecnicos=[];
+
+async function loadAll(){
+  await Promise.all([loadCitas(),loadTecnicos()]);
+  renderDash(); renderEstadisticas();
+}
+async function loadCitas(){
+  var r=await db.from('citas').select('*').order('creado_en',{ascending:false});
+  if(r.error){toast('Error cargando citas','err');return;}
+  allCitas=r.data||[];
+  renderCitasTable(allCitas);
+}
+async function loadTecnicos(){
+  var r=await db.from('tecnicos').select('*').order('nombre');
+  if(r.error){toast('Error cargando técnicos','err');return;}
+  allTecnicos=r.data||[];
+  renderTecnicos();
+}
+
+// ── DASHBOARD ──
+function renderDash(){
+  var total=allCitas.length;
+  var pend=allCitas.filter(c=>c.estado==='pendiente').length;
+  var comp=allCitas.filter(c=>c.estado==='completada').length;
+  var ing=allCitas.filter(c=>c.estado==='completada').reduce((s,c)=>s+parseInt((c.total||'').replace(/\D/g,'')||0),0);
+  document.getElementById('sc-total').textContent=total;
+  document.getElementById('sc-pend').textContent=pend;
+  document.getElementById('sc-comp').textContent=comp;
+  document.getElementById('sc-ing').textContent=fmtIng(ing);
+  var last=allCitas.slice(0,6);
+  var html='<table class="tbl"><thead><tr><th>Ref</th><th>Cliente</th><th>Plan</th><th>Fecha</th><th>Estado</th><th>Técnico</th></tr></thead><tbody>';
+  if(!last.length) html+='<tr><td colspan="6"><div class="tbl-empty">Sin citas aún</div></td></tr>';
+  last.forEach(c=>{
+    var tec=allTecnicos.find(t=>t.id===c.tecnico_id);
+    html+=`<tr>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--m2)">${c.ref}</td>
+      <td>${c.nombre}</td><td>${planBadge(c.plan)}</td>
+      <td style="font-size:12px;color:var(--m2)">${c.fecha_cita}</td>
+      <td>${estadoBadge(c.estado)}</td>
+      <td style="font-size:12px;color:var(--m3)">${tec?tec.nombre:'Sin asignar'}</td>
+    </tr>`;
+  });
+  document.getElementById('dash-citas').innerHTML=html+'</tbody></table>';
+}
+
+// ── CITAS TABLE ──
+function renderCitasTable(data){
+  var tb=document.getElementById('tbody-citas');
+  if(!data.length){tb.innerHTML='<tr><td colspan="8"><div class="tbl-empty">Sin citas</div></td></tr>';return;}
+  tb.innerHTML=data.map(c=>{
+    var tec=allTecnicos.find(t=>t.id===c.tecnico_id);
+    return `<tr>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--m2)">${c.ref}</td>
+      <td><div>${c.nombre}</div><div style="font-size:11px;color:var(--m2)">${c.telefono}</div></td>
+      <td>${planBadge(c.plan)}</td>
+      <td style="font-size:12px;color:var(--m2);max-width:130px">${c.fecha_cita}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px;color:var(--cyan)">${c.total}</td>
+      <td>${estadoBadge(c.estado)}</td>
+      <td style="font-size:12px;color:var(--m3)">${tec?tec.nombre:'—'}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn sm ghost" onclick="openCita('${c.id}')">VER</button>
+        <button class="btn sm danger" onclick="deleteCita('${c.id}','${c.ref}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function filterCitas(){
+  var q=document.getElementById('f-search').value.toLowerCase();
+  var est=document.getElementById('f-estado').value;
+  var plan=document.getElementById('f-plan').value;
+  renderCitasTable(allCitas.filter(c=>
+    (!q||(c.nombre||'').toLowerCase().includes(q)||(c.ref||'').includes(q)||(c.telefono||'').includes(q))&&
+    (!est||c.estado===est)&&(!plan||c.plan===plan)
+  ));
+}
+
+async function openCita(id){
+  var c=allCitas.find(x=>x.id===id);
+  if(!c)return;
+  editCitaId=id;
+  document.getElementById('mc-title').textContent='Cita '+c.ref;
+
+  // Build info grid
+  var info=[
+    ['Ref',c.ref,'cy'],['Cliente',c.nombre,''],['Teléfono',c.telefono,''],
+    ['Correo',c.email,''],['Dirección',c.direccion,''],['Fecha',c.fecha_cita,''],
+    ['Plan',c.plan+' · '+c.equipos+' equipo(s)',''],['Total',c.total,'cy'],
+    ['Adicionales',c.addons||'Ninguno',''],['Obs',c.observaciones||'—','']
+  ];
+  document.getElementById('mc-info').innerHTML=info.map(([k,v,cls])=>`
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:10px 12px">
+      <div style="font-size:10px;color:var(--m2);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${k}</div>
+      <div style="font-size:13px${cls?' ;color:var(--'+cls+');font-family:Space Mono,monospace':''}">${v}</div>
+    </div>`).join('');
+
+  // State & tecnico
+  document.getElementById('mc-estado').value=c.estado||'pendiente';
+  var tecOpts=allTecnicos.map(t=>`<option value="${t.id}"${c.tecnico_id===t.id?' selected':''}>${t.nombre} (@${t.usuario||'?'})</option>`).join('');
+  document.getElementById('mc-tec').innerHTML='<option value="">Sin asignar</option>'+tecOpts;
+
+  // Load chat
+  loadChat(id,'admin-chat-msgs');
+  document.getElementById('modal-cita').classList.add('open');
+}
+async function saveCitaChanges(){
+  if(!editCitaId)return;
+  var estado=document.getElementById('mc-estado').value;
+  var tecId=document.getElementById('mc-tec').value||null;
+  var r=await db.from('citas').update({estado,tecnico_id:tecId}).eq('id',editCitaId);
+  if(r.error){toast('Error: '+r.error.message,'err');return;}
+  toast('✓ Cita actualizada','ok');
+  closeModal('modal-cita');
+  await loadCitas(); renderDash(); renderEstadisticas();
+}
+async function deleteCita(id,ref){
+  if(!confirm('¿Eliminar la cita '+ref+'? Esta acción no se puede deshacer.'))return;
+  var r=await db.from('citas').delete().eq('id',id);
+  if(r.error){toast('Error: '+r.error.message,'err');return;}
+  toast('✓ Cita eliminada','ok');
+  await loadCitas(); renderDash(); renderEstadisticas();
+}
+
+// ── TÉCNICOS ──
+function renderTecnicos(){
+  var g=document.getElementById('tec-grid');
+  if(!allTecnicos.length){g.innerHTML='<div style="padding:20px;color:var(--m2);font-size:13px;font-family:Space Mono,monospace">Sin técnicos. Agrega el primero.</div>';return;}
+  g.innerHTML=allTecnicos.map(t=>{
+    var citas=allCitas.filter(c=>c.tecnico_id===t.id).length;
+    var comp=allCitas.filter(c=>c.tecnico_id===t.id&&c.estado==='completada').length;
+    return `<div class="tec-card">
+      <div class="tec-status"><span class="badge ${t.activo?'activo':'inactivo'}">${t.activo?'Activo':'Inactivo'}</span></div>
+      <div class="tec-avatar">👨‍🔧</div>
+      <div class="tec-name">${t.nombre}</div>
+      <div class="tec-user">@${t.usuario||'sin usuario'}</div>
+      <div class="tec-tel">${t.telefono||''}</div>
+      <div class="tec-stats">
+        <div class="tec-stat"><div class="tec-stat-n">${citas}</div><div class="tec-stat-l">asignadas</div></div>
+        <div class="tec-stat"><div class="tec-stat-n">${comp}</div><div class="tec-stat-l">completadas</div></div>
+      </div>
+      <div class="tec-actions">
+        <button class="btn sm ghost" onclick="editTec('${t.id}')">EDITAR</button>
+        <button class="btn sm ghost" onclick="showCredentials('${t.id}')">🔑 CREDS</button>
+        <button class="btn sm danger" onclick="deleteTec('${t.id}','${t.nombre}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function genPassword(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var pass='';
+  for(var i=0;i<10;i++) pass+=chars.charAt(Math.floor(Math.random()*chars.length));
+  return pass;
+}
+function genUsername(nombre){
+  var base=nombre.toLowerCase().split(' ')[0].replace(/[^a-z]/g,'');
+  return base+(Math.floor(Math.random()*90)+10);
+}
+
+function openAddTec(){
+  document.getElementById('mt-title').textContent='Agregar técnico';
+  document.getElementById('t-nom').value='';
+  document.getElementById('t-tel').value='';
+  document.getElementById('t-email').value='';
+  document.getElementById('t-activo').value='true';
+  document.getElementById('tec-cred-display').style.display='none';
+  document.getElementById('btn-save-tec').textContent='GUARDAR';
+  document.getElementById('modal-tec').dataset.editId='';
+  document.getElementById('modal-tec').dataset.mode='add';
+  document.getElementById('modal-tec').classList.add('open');
+}
+function editTec(id){
+  var t=allTecnicos.find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('mt-title').textContent='Editar técnico';
+  document.getElementById('t-nom').value=t.nombre||'';
+  document.getElementById('t-tel').value=t.telefono||'';
+  document.getElementById('t-email').value=t.email||'';
+  document.getElementById('t-activo').value=t.activo?'true':'false';
+  document.getElementById('tec-cred-display').style.display='none';
+  document.getElementById('btn-save-tec').textContent='ACTUALIZAR';
+  document.getElementById('modal-tec').dataset.editId=id;
+  document.getElementById('modal-tec').dataset.mode='edit';
+  document.getElementById('modal-tec').classList.add('open');
+}
+async function showCredentials(id){
+  var t=allTecnicos.find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('mt-title').textContent='Credenciales de '+t.nombre;
+  document.getElementById('t-nom').value=t.nombre;
+  document.getElementById('t-tel').value=t.telefono||'';
+  document.getElementById('t-email').value=t.email||'';
+  document.getElementById('t-activo').value=t.activo?'true':'false';
+  document.getElementById('cred-user').textContent=t.usuario||'—';
+  document.getElementById('cred-pass').textContent='(oculta por seguridad)';
+  document.getElementById('tec-cred-display').style.display='block';
+  document.getElementById('btn-save-tec').textContent='ACTUALIZAR';
+  document.getElementById('modal-tec').dataset.editId=id;
+  document.getElementById('modal-tec').dataset.mode='edit';
+  document.getElementById('modal-tec').classList.add('open');
+}
+
+async function saveTecnico(){
+  var nom=document.getElementById('t-nom').value.trim();
+  var tel=document.getElementById('t-tel').value.trim();
+  var email=document.getElementById('t-email').value.trim();
+  var activo=document.getElementById('t-activo').value==='true';
+  var editId=document.getElementById('modal-tec').dataset.editId;
+  var mode=document.getElementById('modal-tec').dataset.mode;
+  if(!nom||!tel){toast('⚠️ Nombre y teléfono son obligatorios','err');return;}
+  var r;
+  if(mode==='edit'&&editId){
+    r=await db.from('tecnicos').update({nombre:nom,telefono:tel,email,activo}).eq('id',editId);
+    if(r.error){toast('Error: '+r.error.message,'err');return;}
+    toast('✓ Técnico actualizado','ok');
+    closeModal('modal-tec');
+  } else {
+    // Auto-generate credentials
+    var usuario=genUsername(nom);
+    var password=genPassword();
+    r=await db.from('tecnicos').insert([{nombre:nom,telefono:tel,email,activo,usuario,password_hash:password}]).select();
+    if(r.error){toast('Error: '+r.error.message,'err');return;}
+    // Show credentials to admin
+    document.getElementById('cred-user').textContent=usuario;
+    document.getElementById('cred-pass').textContent=password;
+    document.getElementById('tec-cred-display').style.display='block';
+    document.getElementById('btn-save-tec').textContent='CERRAR';
+    document.getElementById('modal-tec').dataset.mode='done';
+    toast('✓ Técnico creado · Guarda las credenciales','warn');
+    await loadTecnicos(); renderEstadisticas();
+    return;
+  }
+  await loadTecnicos(); renderEstadisticas();
+}
+
+async function deleteTec(id,nombre){
+  if(!confirm('¿Eliminar a '+nombre+'?'))return;
+  var r=await db.from('tecnicos').delete().eq('id',id);
+  if(r.error){toast('Error: '+r.error.message,'err');return;}
+  toast('✓ Técnico eliminado','ok');
+  await loadTecnicos();
+}
+
+// ── ESTADÍSTICAS ──
+function renderEstadisticas(){
+  var now=new Date();
+  var mes=allCitas.filter(c=>{if(!c.creado_en)return false;var d=new Date(c.creado_en);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  var ingMes=mes.filter(c=>c.estado==='completada').reduce((s,c)=>s+parseInt((c.total||'').replace(/\D/g,'')||0),0);
+  var eqs=allCitas.reduce((s,c)=>s+(parseInt(c.equipos)||0),0);
+  var planes={};allCitas.forEach(c=>{planes[c.plan]=(planes[c.plan]||0)+1;});
+  var topPlan=Object.entries(planes).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('est-mes').textContent=mes.length;
+  document.getElementById('est-ing').textContent=fmtIng(ingMes);
+  document.getElementById('est-eq').textContent=eqs;
+  document.getElementById('est-plan').textContent=topPlan?topPlan[0]:'—';
+  var total=allCitas.length||1;
+  // planes chart
+  document.getElementById('chart-planes').innerHTML=['Básico','Empresarial','Corporativo'].map(p=>{
+    var cnt=planes[p]||0;var pct=Math.round(cnt/total*100);
+    return `<div class="bar-row"><span class="bar-label">${p}</span><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${cnt}</span></div>`;
+  }).join('');
+  // estados
+  var est={pendiente:0,confirmada:0,completada:0,cancelada:0};
+  allCitas.forEach(c=>{if(est[c.estado]!==undefined)est[c.estado]++;});
+  var colors={pendiente:'var(--amber)',confirmada:'var(--acc)',completada:'var(--green)',cancelada:'var(--red)'};
+  document.getElementById('chart-estados').innerHTML=Object.entries(est).map(([e,cnt])=>`
+    <div class="pie-item"><div class="pie-dot" style="background:${colors[e]}"></div>
+    <span class="pie-lbl">${e.charAt(0).toUpperCase()+e.slice(1)}</span>
+    <span class="pie-pct">${cnt} (${Math.round(cnt/total*100)}%)</span></div>`).join('');
+  // técnicos rendimiento
+  document.getElementById('chart-tecnicos').innerHTML=allTecnicos.length
+    ? allTecnicos.map(t=>{
+        var cnt=allCitas.filter(c=>c.tecnico_id===t.id).length;
+        var comp=allCitas.filter(c=>c.tecnico_id===t.id&&c.estado==='completada').length;
+        var pct=cnt?Math.round(comp/cnt*100):0;
+        return `<div class="bar-row"><span class="bar-label">${t.nombre}</span><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${comp}/${cnt}</span></div>`;
+      }).join('')
+    : '<div style="color:var(--m2);font-size:12px;font-family:Space Mono,monospace">Sin técnicos</div>';
+}
+
+// ── CHAT / NOTAS ──
+async function loadChat(citaId,containerId){
+  var el=document.getElementById(containerId);
+  el.innerHTML='<div style="text-align:center;color:var(--m2);font-size:12px;padding:12px"><div class="spin" style="margin:0 auto 6px"></div>Cargando...</div>';
+  var r=await db.from('notas_cita').select('*').eq('cita_id',citaId).order('creado_en');
+  if(r.error||!r.data||!r.data.length){
+    el.innerHTML='<div style="text-align:center;color:var(--m2);font-size:12px;padding:20px;font-family:Space Mono,monospace">Sin notas aún</div>';
+    return;
+  }
+  el.innerHTML=r.data.map(n=>`
+    <div class="chat-msg ${n.rol}">
+      <div class="chat-msg-autor">${n.autor}<span class="rol-tag ${n.rol}">${n.rol}</span></div>
+      <div class="chat-msg-txt">${n.mensaje}</div>
+      <div class="chat-msg-time">${new Date(n.creado_en).toLocaleString('es-CO',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+async function sendNote(citaId,tecnicoId,autor,rol,inputId,containerId){
+  var inp=document.getElementById(inputId);
+  var msg=inp.value.trim();
+  if(!msg)return;
+  var r=await db.from('notas_cita').insert([{cita_id:citaId,tecnico_id:tecnicoId||null,autor,rol,mensaje:msg}]);
+  if(r.error){toast('Error enviando nota','err');return;}
+  inp.value='';
+  loadChat(citaId,containerId);
+}
+function sendAdminNote(){sendNote(editCitaId,null,'Administrador','admin','admin-chat-input','admin-chat-msgs');}
+function sendTecNote(){sendNote(editTecCitaId,currentTec.id,currentTec.nombre,'tecnico','tec-chat-input','tec-chat-msgs');}
+
+// ── TÉCNICO DATA ──
+var myAllCitas=[], myFilteredCitas=[];
+async function loadTecData(){
+  if(!currentTec)return;
+  var r=await db.from('citas').select('*').eq('tecnico_id',currentTec.id).order('creado_en',{ascending:false});
+  if(r.error){toast('Error cargando tus citas','err');return;}
+  myAllCitas=r.data||[];
+  myFilteredCitas=myAllCitas;
+  renderTecCitas(myAllCitas);
+  renderTecStats();
+}
+function filterTecCitas(){
+  var est=document.getElementById('tec-f-estado').value;
+  myFilteredCitas=myAllCitas.filter(c=>!est||c.estado===est);
+  renderTecCitas(myFilteredCitas);
+}
+function renderTecCitas(data){
+  var el=document.getElementById('tec-citas-list');
+  if(!data.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m2);font-size:13px;font-family:Space Mono,monospace">Sin citas asignadas</div>';
+    return;
+  }
+  el.innerHTML=data.map(c=>{
+    var mapUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.direccion+', Apartadó, Colombia');
+    return `<div class="cita-card">
+      <div class="cita-card-top">
+        <div>
+          <div class="cita-ref">${c.ref}</div>
+          <div class="cita-fecha">📅 ${c.fecha_cita}</div>
+          <div class="cita-plan">${c.plan} · ${c.equipos} equipo(s)</div>
+        </div>
+        <div>${estadoBadge(c.estado)}</div>
+      </div>
+      <div class="cita-info-grid">
+        <div class="cita-info-item"><div class="cita-info-label">Cliente</div><div class="cita-info-val">${c.nombre}</div></div>
+        <div class="cita-info-item"><div class="cita-info-label">Teléfono</div><div class="cita-info-val">${c.telefono}</div></div>
+        <div class="cita-info-item"><div class="cita-info-label">Correo</div><div class="cita-info-val" style="font-size:11px">${c.email}</div></div>
+        <div class="cita-info-item"><div class="cita-info-label">Total</div><div class="cita-info-val" style="color:var(--cyan);font-family:Space Mono,monospace">${c.total}</div></div>
+        <div class="cita-info-item" style="grid-column:1/-1"><div class="cita-info-label">Dirección</div><div class="cita-info-val">${c.direccion}</div></div>
+        ${c.observaciones&&c.observaciones!=='Ninguna'?`<div class="cita-info-item" style="grid-column:1/-1"><div class="cita-info-label">Observaciones</div><div class="cita-info-val">${c.observaciones}</div></div>`:''}
+      </div>
+      <div class="cita-actions">
+        <a class="map-link" href="${mapUrl}" target="_blank">📍 Ver en mapa</a>
+        <button class="btn sm" onclick="openTecCita('${c.id}')">GESTIONAR CITA</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderTecStats(){
+  var total=myAllCitas.length;
+  var comp=myAllCitas.filter(c=>c.estado==='completada').length;
+  var pend=myAllCitas.filter(c=>c.estado==='pendiente').length;
+  var ing=myAllCitas.filter(c=>c.estado==='completada').reduce((s,c)=>s+parseInt((c.total||'').replace(/\D/g,'')||0),0);
+  document.getElementById('tsc-total').textContent=total;
+  document.getElementById('tsc-comp').textContent=comp;
+  document.getElementById('tsc-pend').textContent=pend;
+  document.getElementById('tsc-ing').textContent=fmtIng(ing);
+  var tt=total||1;
+  var est={pendiente:0,confirmada:0,completada:0,cancelada:0};
+  myAllCitas.forEach(c=>{if(est[c.estado]!==undefined)est[c.estado]++;});
+  var colors={pendiente:'var(--amber)',confirmada:'var(--acc)',completada:'var(--green)',cancelada:'var(--red)'};
+  document.getElementById('tec-chart-estados').innerHTML=Object.entries(est).map(([e,cnt])=>`
+    <div class="pie-item"><div class="pie-dot" style="background:${colors[e]}"></div>
+    <span class="pie-lbl">${e.charAt(0).toUpperCase()+e.slice(1)}</span>
+    <span class="pie-pct">${cnt} (${Math.round(cnt/tt*100)}%)</span></div>`).join('');
+  var planes={};myAllCitas.forEach(c=>{planes[c.plan]=(planes[c.plan]||0)+1;});
+  document.getElementById('tec-chart-planes').innerHTML=['Básico','Empresarial','Corporativo'].map(p=>{
+    var cnt=planes[p]||0;var pct=Math.round(cnt/tt*100);
+    return `<div class="bar-row"><span class="bar-label">${p}</span><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${cnt}</span></div>`;
+  }).join('');
+}
+async function openTecCita(id){
+  var c=myAllCitas.find(x=>x.id===id);
+  if(!c)return;
+  editTecCitaId=id;
+  document.getElementById('mtc-title').textContent=c.ref+' · '+c.nombre;
+  document.getElementById('mtc-estado').value=c.estado==='completada'?'completada':(c.estado==='cancelada'?'cancelada':'confirmada');
+  document.getElementById('mtc-info').innerHTML=`
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--m2);margin-bottom:6px">📅 ${c.fecha_cita}</div>
+      <div style="font-size:13px;font-weight:600">${c.nombre}</div>
+      <div style="font-size:12px;color:var(--m2)">${c.telefono} · ${c.email}</div>
+      <div style="font-size:12px;color:var(--m3);margin-top:4px">📍 ${c.direccion}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        ${estadoBadge(c.estado)}${planBadge(c.plan)}
+        <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--cyan)">${c.total}</span>
+      </div>
+    </div>`;
+  loadChat(id,'tec-chat-msgs');
+  document.getElementById('modal-tec-cita').classList.add('open');
+}
+async function saveTecCitaChanges(){
+  if(!editTecCitaId)return;
+  var estado=document.getElementById('mtc-estado').value;
+  var r=await db.from('citas').update({estado}).eq('id',editTecCitaId);
+  if(r.error){toast('Error: '+r.error.message,'err');return;}
+  toast('✓ Estado actualizado','ok');
+  closeModal('modal-tec-cita');
+  await loadTecData();
+}
+
+// ── TABS ──
+function showAdminTab(name,el){
+  document.querySelectorAll('#admin-app .tab-page').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('act'));
+  document.getElementById('tab-'+name).classList.add('act');
+  if(el)el.classList.add('act');
+}
+function showTecTab(name,el){
+  document.querySelectorAll('.tec-tab-page').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.tec-tab-btn').forEach(b=>{
+    b.style.color='var(--m2)';b.style.borderBottomColor='transparent';
+  });
+  document.getElementById('tec-tab-'+name).classList.add('act');
+  if(el){el.style.color='var(--achi)';el.style.borderBottomColor='var(--acc)';}
+}
+
+// ── MODAL ──
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='modal-tec'){document.getElementById('tec-cred-display').style.display='none';}
+}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// ── HELPERS ──
+function estadoBadge(e){
+  var l={pendiente:'⏳ PENDIENTE',confirmada:'✓ CONFIRMADA',completada:'✅ COMPLETADA',cancelada:'✗ CANCELADA'};
+  return `<span class="badge ${e||'pendiente'}">${l[e]||e}</span>`;
+}
+function planBadge(p){
+  return `<span class="badge ${(p||'').toLowerCase()}">${p}</span>`;
+}
+function fmtIng(n){
+  if(!n)return'$0';
+  if(n>=1000000)return'$'+Math.round(n/100000)/10+'M';
+  if(n>=1000)return'$'+Math.round(n/1000)+'k';
+  return'$'+n.toLocaleString('es-CO');
+}
+
+// ── TOAST ──
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  document.getElementById('tmsg').textContent=msg;
+  t.className='show '+(type||'info');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3500);
+}
+
+// ── ENTER on login ──
+document.getElementById('lu').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lp').focus();});
+</script>
+</body>
+</html>
